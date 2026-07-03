@@ -394,7 +394,9 @@ function ensureRestartButton(show, room) {
     btn.id = 'restartRoundBtn';
     btn.className = 'btn btn-ghost';
     btn.innerHTML = '<span>♻️</span><span>Restart round</span>';
-    btn.addEventListener('click', () => continueRound(S.code, room.round));
+    btn.addEventListener('click', () =>
+      continueRound(S.code, room.round)
+        .catch(err => toast(err.message || 'Could not restart the round')));
     $('hostAimPanel').appendChild(btn);
   } else if (!show && btn) {
     btn.remove();
@@ -480,7 +482,16 @@ async function doJoin() {
 }
 
 /* ----- lobby ----- */
-$('startBtn').addEventListener('click', () => startGame(S.code));
+$('startBtn').addEventListener('click', async () => {
+  $('startBtn').disabled = true;
+  try {
+    await startGame(S.code);
+  } catch (err) {
+    toast(err.message || 'Could not start the game');
+    $('startBtn').disabled = false;
+  }
+  // on success the realtime echo flips phase → render() re-enables UI
+});
 $('lobbyLeaveBtn').addEventListener('click', async () => {
   const isHost = S.room && S.room.host_id === S.myId;
   if (isHost) {
@@ -565,7 +576,8 @@ $('lockBtn').addEventListener('click', async () => {
 
 /* ----- round end ----- */
 $('continueBtn').addEventListener('click', () =>
-  continueRound(S.code, S.room.round));
+  continueRound(S.code, S.room.round)
+    .catch(err => toast(err.message || 'Could not start the next round')));
 
 $('switchHostBtn').addEventListener('click', () => {
   const list = $('pickHostList');
@@ -585,7 +597,9 @@ $('switchHostBtn').addEventListener('click', () => {
 $('pickHostCancel').addEventListener('click', () =>
   openModal('pickHostOverlay', false));
 
-$('hostExitBtn').addEventListener('click', () => backToLobby(S.code));
+$('hostExitBtn').addEventListener('click', () =>
+  backToLobby(S.code)
+    .catch(err => toast(err.message || 'Could not return to the lobby')));
 
 $('guestContinueBtn').addEventListener('click', () => {
   S.guestHidScores = true;      // dismiss scores, wait for the host
@@ -620,7 +634,7 @@ function escapeHtml(s) {
 window.addEventListener('pagehide', () => {
   if (S.myId && S.room && S.room.host_id !== S.myId) {
     // fire-and-forget; the sweep trigger cleans up anything missed
-    leaveRoom(S.myId);
+    leaveRoom(S.myId).catch(() => {});
   }
 });
 
