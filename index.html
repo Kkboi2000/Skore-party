@@ -15,7 +15,10 @@
       <span class="rb-label">ROOM</span><span class="rb-code" id="roomBadgeCode">00000</span>
     </div>
     <div class="title-wordmark">Skore Party</div>
-    <div class="me-badge" id="meBadge" hidden></div>
+    <div class="topbar-right">
+      <div class="me-badge" id="meBadge" hidden></div>
+      <button class="gear-btn" id="settingsBtn" title="Settings" aria-label="Settings">⚙️</button>
+    </div>
   </div>
 
   <!-- ======================= SCREEN: TITLE ======================= -->
@@ -42,8 +45,6 @@
 
       <p class="entry-error" id="entryError" hidden></p>
     </div>
-
-    <div class="credit">★ Krit's vibe coding ★</div>
   </section>
 
   <!-- ======================= SCREEN: LOBBY ======================= -->
@@ -85,7 +86,7 @@
           <div class="word-stack" id="leftStack"></div>
         </div>
         <div class="clue-divider"></div>
-        <button class="shuffle-btn" id="shuffleBtn" title="New words" hidden>🔄</button>
+        <button class="shuffle-btn" id="shuffleBtn" title="New words" hidden>🗘</button>
         <div class="clue-half right">
           <span class="arrow">→</span>
           <div class="word-stack" id="rightStack"></div>
@@ -98,11 +99,6 @@
           <div class="seg" id="modeSeg">
             <button data-mode="suggested">Suggested</button>
             <button data-mode="custom">Custom</button>
-          </div>
-          <div class="seg seg-lang" id="langSeg">
-            <button data-lang="en">EN</button>
-            <button data-lang="th">ไทย</button>
-            <button data-lang="ja">日本語</button>
           </div>
         </div>
         <div class="controls">
@@ -168,6 +164,29 @@
       <div class="controls">
         <button class="btn btn-spin" id="inviteAcceptBtn"><span>✅</span><span>Accept</span></button>
         <button class="btn btn-ghost" id="inviteDeclineBtn"><span>❌</span><span>Decline</span></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================= MODAL: SETTINGS ======================= -->
+  <div class="overlay" id="settingsOverlay">
+    <div class="modal settings-modal">
+      <div class="settings-head">
+        <h2>Settings</h2>
+        <button class="settings-close" id="settingsCloseBtn" aria-label="Close">✕</button>
+      </div>
+      <div class="settings-body">
+        <p class="field-label">Language</p>
+        <div class="lang-grid" id="langGrid"><!-- rows injected by app.js --></div>
+        <p class="settings-note">Pick one Main (big, centre). Sub ▲ shows small above, Sub ▼ small below. None hides it.</p>
+
+        <p class="field-label">Sound</p>
+        <div class="sound-seg" id="soundSeg">
+          <button data-sound="on">On</button>
+          <button data-sound="off">Off</button>
+        </div>
+
+        <div class="credit settings-credit">★ Krit's vibe code ★</div>
       </div>
     </div>
   </div>
