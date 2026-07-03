@@ -9,6 +9,16 @@
    ============================================================ */
 import { sb } from './config.js';
 
+/* Supabase query builders are LAZY: the HTTP request is only sent
+   when the builder is awaited (its .then() runs the fetch). Any
+   query returned to a caller that drops the promise never executes.
+   `run` forces execution and surfaces errors, so every export below
+   is safe to fire-and-forget. */
+async function run(query) {
+  const { error } = await query;
+  if (error) throw error;
+}
+
 /* ---------------- title screen ---------------- */
 
 export async function createRoom(name) {
@@ -78,18 +88,18 @@ export function watchRoom(code, { onRoom, onPlayers }) {
 /* ---------------- host actions ---------------- */
 
 export const startGame = code =>
-  sb.from('rooms').update({ phase: 'prep' }).eq('code', code);
+  run(sb.from('rooms').update({ phase: 'prep' }).eq('code', code));
 
 export async function deploy(code, leftWord, rightWord, mode) {
   // reset every guess from the previous round, then open aiming.
   // NOTE: target_angle stays null — the secret lives in the host's memory.
-  await sb.from('players')
-    .update({ locked: false, needle: null }).eq('room_code', code);
-  await sb.from('rooms').update({
+  await run(sb.from('players')
+    .update({ locked: false, needle: null }).eq('room_code', code));
+  await run(sb.from('rooms').update({
     phase: 'aiming', mode,
     left_word: leftWord, right_word: rightWord,
     target_angle: null
-  }).eq('code', code);
+  }).eq('code', code));
 }
 
 /* Band geometry: bands are 9° wide, values [2,3,4,3,2] centered
@@ -102,53 +112,53 @@ export function scoreFor(needle, target) {
 
 export async function reveal(code, targetAngle, guests) {
   await Promise.all(guests.map(g =>
-    sb.from('players')
+    run(sb.from('players')
       .update({ score: g.score + scoreFor(g.needle, targetAngle) })
-      .eq('id', g.id)));
-  await sb.from('rooms')
+      .eq('id', g.id))));
+  await run(sb.from('rooms')
     .update({ phase: 'revealed', target_angle: targetAngle })
-    .eq('code', code);
+    .eq('code', code));
 }
 
 export const continueRound = (code, round) =>
-  sb.from('rooms').update({
+  run(sb.from('rooms').update({
     phase: 'prep', target_angle: null,
     left_word: null, right_word: null,
     round: round + 1
-  }).eq('code', code);
+  }).eq('code', code));
 
 export const backToLobby = code =>
-  sb.from('rooms').update({
+  run(sb.from('rooms').update({
     phase: 'lobby', target_angle: null,
     left_word: null, right_word: null,
     pending_host: null
-  }).eq('code', code);
+  }).eq('code', code));
 
 export const deleteRoom = code =>
-  sb.from('rooms').delete().eq('code', code); // cascades to players
+  run(sb.from('rooms').delete().eq('code', code)); // cascades to players
 
 /* ---------------- switch host ---------------- */
 
 export const offerHost = (code, playerId) =>
-  sb.from('rooms').update({ pending_host: playerId }).eq('code', code);
+  run(sb.from('rooms').update({ pending_host: playerId }).eq('code', code));
 
 export const declineHost = code =>
-  sb.from('rooms').update({ pending_host: null }).eq('code', code);
+  run(sb.from('rooms').update({ pending_host: null }).eq('code', code));
 
 export async function acceptHost(code, myId, oldHostId) {
-  await sb.from('players').update({ is_host: false }).eq('id', oldHostId);
-  await sb.from('players').update({ is_host: true }).eq('id', myId);
-  await sb.from('rooms').update({
+  await run(sb.from('players').update({ is_host: false }).eq('id', oldHostId));
+  await run(sb.from('players').update({ is_host: true }).eq('id', myId));
+  await run(sb.from('rooms').update({
     host_id: myId, pending_host: null,
     phase: 'prep', target_angle: null,
     left_word: null, right_word: null
-  }).eq('code', code);
+  }).eq('code', code));
 }
 
 /* ---------------- guest actions ---------------- */
 
 export const lockAnswer = (playerId, needle) =>
-  sb.from('players').update({ needle, locked: true }).eq('id', playerId);
+  run(sb.from('players').update({ needle, locked: true }).eq('id', playerId));
 
 export const leaveRoom = playerId =>
-  sb.from('players').delete().eq('id', playerId);
+  run(sb.from('players').delete().eq('id', playerId));
