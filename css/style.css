@@ -308,8 +308,67 @@ body{
 @keyframes toastIn{from{transform:translate(-50%,12px);opacity:0;}to{transform:translate(-50%,0);opacity:1;}}
 .credit{text-align:center;font-weight:800;letter-spacing:.08em;opacity:.55;margin-top:26px;font-size:13px;}
 
+/* ---------- topbar right / gear ---------- */
+.topbar-right{display:flex;align-items:center;gap:8px;min-width:64px;justify-content:flex-end;}
+.gear-btn{
+  width:36px;height:36px;border-radius:50%;border:1px solid rgba(255,255,255,.15);
+  background:rgba(255,255,255,.08);font-size:17px;cursor:pointer;line-height:1;
+  display:flex;align-items:center;justify-content:center;padding:0;
+  transition:transform .2s ease,background .15s;
+}
+.gear-btn:hover{background:rgba(255,255,255,.16);transform:rotate(40deg);}
+
+/* ---------- settings modal ---------- */
+.settings-modal{padding:0;overflow:hidden;text-align:left;max-width:420px;}
+.settings-head{
+  background:var(--navy);color:var(--cream);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 20px;
+}
+.settings-head h2{margin:0;font-size:20px;color:var(--cream);}
+.settings-close{
+  border:none;background:transparent;color:var(--cream);font-size:20px;
+  cursor:pointer;padding:2px 6px;line-height:1;font-family:inherit;
+}
+.settings-body{padding:18px 20px 22px;}
+.settings-body .field-label{margin-top:4px;}
+.lang-grid{display:flex;flex-direction:column;gap:10px;}
+.lang-row{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  background:rgba(28,58,94,.07);border-radius:12px;padding:10px 12px;
+}
+.lang-name{font-weight:800;font-size:15px;white-space:nowrap;}
+.lang-opts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;}
+.lang-opt{
+  border:1px solid rgba(28,58,94,.16);background:#fff;border-radius:10px;
+  padding:8px 10px;font-weight:800;font-size:12px;color:var(--navy-deep);
+  cursor:pointer;font-family:inherit;white-space:nowrap;
+  transition:background .15s,color .15s;
+}
+.lang-opt.active{background:var(--navy);border-color:var(--navy);color:#fff;}
+.lang-opt:disabled{opacity:.35;cursor:default;}
+.settings-note{font-size:12px;opacity:.6;line-height:1.55;margin:12px 0 18px;}
+.sound-seg{
+  display:flex;background:rgba(28,58,94,.08);border-radius:999px;padding:4px;gap:4px;
+}
+.sound-seg button{
+  flex:1;border:none;background:transparent;border-radius:999px;
+  padding:12px;font-weight:800;font-size:15px;color:var(--navy-deep);
+  cursor:pointer;font-family:inherit;transition:background .15s,color .15s;
+}
+.sound-seg button.active{background:var(--navy);color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.18);}
+.settings-credit{margin-top:20px;}
+
+/* ---------- multi-language word stack ---------- */
+.w-sub{font-weight:700;font-size:clamp(11px,3vw,13px);opacity:.6;line-height:1.15;}
+
+/* owner's name above their red needle at reveal */
+.needle-label{fill:var(--red);}
+
 @media (max-width:420px){
   .btn{padding:13px 16px;font-size:14px;}
   .controls{gap:9px;}
   .seg button{padding:8px 12px;font-size:12px;}
+  .lang-opt{padding:7px 8px;font-size:11px;}
+  .lang-name{font-size:13px;}
 }
