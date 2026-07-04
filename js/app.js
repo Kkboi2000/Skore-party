@@ -12,7 +12,7 @@
    ============================================================ */
 import {
   createRoom, joinRoom, watchRoom, fetchPlayer,
-  startGame, deploy, setTopic, reveal, scoreFor, continueRound,
+  startGame, deploy, setTopic, broadcastTopic, reveal, scoreFor, continueRound,
   backToLobby, deleteRoom,
   offerHost, declineHost, acceptHost,
   lockAnswer, leaveRoom
@@ -31,8 +31,16 @@ const DECKS = window.WAVELENGTH_WORDS;
 // computes the SAME colour for the SAME player without any extra sync.
 const NEEDLE_RED = '#d6322e';
 const NEEDLE_COLORS = [
-  '#d6322e', '#2f7dd1', '#7a3fb0', '#e08a1e', '#159e7a',
-  '#c2306e', '#4a6f2b', '#0f7d8c', '#b5462b', '#5b52c9'
+  '#d81e3f', // red
+  '#1f6dd6', // blue
+  '#17a34a', // green
+  '#8e2bd0', // violet
+  '#e23ba0', // pink
+  '#0d8f8f', // teal
+  '#7a4a1e', // brown
+  '#2b3350', // near-black slate
+  '#b81365', // berry
+  '#00517a'  // deep petrol
 ];
 function guestColorMap(guests) {
   const m = {};
@@ -54,8 +62,8 @@ const S = {
   wordMode: 'suggested', deckIndex: 0,
   customLeft: '', customRight: '',
 
-  // host topic box (synced to guests via the rooms.topic column)
-  topicOn: false, topicDraft: '', topicMode: '',
+  // host topic box (synced via rooms.topic + a realtime broadcast mirror)
+  topicOn: false, topicDraft: '', topicMode: '', topicLive: null,
 
   // ui bookkeeping
   dial: null, dialRole: null,
@@ -132,6 +140,10 @@ function enterRoom(code, playerId) {
     onPlayers(players) {
       S.players = players;
       render();
+    },
+    onTopic(topic) {              // live mirror (used when the DB column is absent)
+      S.topicLive = topic;
+      render();
     }
   });
 }
@@ -143,7 +155,7 @@ function cleanup() {
   Object.assign(S, {
     myId: null, code: null, room: null, players: [],
     localTarget: null, hasSpun: false,
-    topicOn: false, topicDraft: '', topicMode: '',
+    topicOn: false, topicDraft: '', topicMode: '', topicLive: null,
     dial: null, dialRole: null, structKey: '', roundKey: '', lastPhase: null,
     guestHidScores: false, seenInvite: null, toldInviteSent: null
   });
@@ -181,10 +193,12 @@ function render() {
   const isHost = room.host_id === S.myId;
   const guests = S.players.filter(p => p.id !== room.host_id);
 
-  // scores just went up on every screen — one fanfare each
+  // phase-transition sounds (fire once per transition, on every client)
   if (room.phase === 'revealed' && S.lastPhase !== 'revealed' && S.lastPhase !== null) {
     playSound('reveal');
   }
+  if (room.phase === 'prep' && S.lastPhase === 'lobby') playSound('start');   // game starts
+  if (room.phase === 'aiming' && S.lastPhase === 'prep') playSound('deploy'); // host deploys
   S.lastPhase = room.phase;
 
   handleInvites(room, isHost);
@@ -395,16 +409,11 @@ function makeWordInput(side) {
      null → box removed;  '' → present but empty;  text → shown.
    ------------------------------------------------------------ */
 let topicTimer = null;
-let topicSyncWarned = false;
 
 function pushTopic(topic) {
+  broadcastTopic(topic);                 // instant live mirror to every guest
   if (!S.code) return Promise.resolve();
-  return setTopic(S.code, topic).catch(() => {
-    if (!topicSyncWarned) {
-      topicSyncWarned = true;
-      toast('To share the topic with guests, add a "topic" text column to your Supabase rooms table.', 5200);
-    }
-  });
+  return setTopic(S.code, topic).catch(() => { /* column is optional — broadcast covers live sync */ });
 }
 function debouncePushTopic(v) {
   clearTimeout(topicTimer);
@@ -422,10 +431,14 @@ function renderTopic() {
   const isHost = room.host_id === S.myId;
   const phase = room.phase;
 
+  // when the DB column exists it is authoritative; otherwise use the live mirror
+  const colPresent = Object.prototype.hasOwnProperty.call(room, 'topic');
+  const liveTopic = colPresent ? room.topic : S.topicLive;
+
   let mode;
   if (phase === 'lobby') mode = 'hidden';
   else if (isHost) mode = S.topicOn ? 'host-edit' : 'host-add';
-  else mode = ((phase === 'aiming' || phase === 'revealed') && room.topic) ? 'guest-show' : 'hidden';
+  else mode = ((phase === 'aiming' || phase === 'revealed') && liveTopic) ? 'guest-show' : 'hidden';
 
   if (mode !== S.topicMode) {
     S.topicMode = mode;
@@ -435,7 +448,7 @@ function renderTopic() {
       const add = document.createElement('button');
       add.type = 'button';
       add.className = 'topic-add';
-      add.innerHTML = '<span class="plus">+</span><span>Add a topic to rate</span>';
+      add.innerHTML = '<span class="plus">+</span><span>Add a topic</span>';
       add.addEventListener('click', () => {
         S.topicOn = true;
         S.topicDraft = '';
@@ -451,7 +464,7 @@ function renderTopic() {
       box.className = 'topic-box';
       const label = document.createElement('div');
       label.className = 'topic-label';
-      label.textContent = 'Topic to rate';
+      label.textContent = 'Topic';
       const inp = document.createElement('textarea');
       inp.id = 'topicInput';
       inp.className = 'topic-input';
@@ -489,7 +502,7 @@ function renderTopic() {
       box.className = 'topic-box readonly';
       const label = document.createElement('div');
       label.className = 'topic-label';
-      label.textContent = 'Topic to rate';
+      label.textContent = 'Topic';
       const text = document.createElement('div');
       text.className = 'topic-text';
       text.id = 'topicText';
@@ -502,7 +515,7 @@ function renderTopic() {
 
   if (mode === 'guest-show') {
     const t = $('topicText');
-    if (t) t.textContent = room.topic || '';
+    if (t) t.textContent = liveTopic || '';
   }
 }
 
