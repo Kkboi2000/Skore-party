@@ -1,0 +1,293 @@
+/* ============================================================
+   Skore Party — i18n.js
+   Whole-UI translation driven by the current MAIN language
+   (picked in Settings). t(key) returns the string for the main
+   language, falling back to English; applyI18n() rewrites every
+   element tagged with data-i18n / data-i18n-ph in the DOM.
+
+   Templates use {tokens} — callers do t(key).replace('{done}', n).
+   ============================================================ */
+import { mainLang } from './prefs.js';
+
+const STR = {
+  en: {
+    room_label: 'ROOM',
+    tagline: 'One clue. One needle. How close can your friends get?',
+    name_label: 'Your name',
+    name_ph: 'e.g. Krit',
+    new_game: 'New game',
+    join_game: 'Join game',
+    code_ph: '5-digit code',
+    join_room: 'Join room',
+
+    share_code: 'Share this code with your friends',
+    players_in_room: 'Players in room',
+    start_game: 'Start game',
+    waiting_host: 'Waiting for the host to start…',
+    leave_room: 'Leave room',
+
+    mode_suggested: 'Suggested',
+    mode_custom: 'Custom',
+    spin_target: 'Spin target',
+    deploy: 'Deploy',
+    guesses: 'Guesses',
+    reveal: 'Reveal',
+    lock_answer: 'Lock answer',
+    locked: 'Locked ✓',
+    scores: 'Scores',
+    th_player: 'Player',
+    th_round: 'This round',
+    th_total: 'Total',
+    continue: 'Continue',
+    switch_host: 'Switch host',
+    exit: 'Exit',
+    restart_round: 'Restart round',
+    reset_scores: 'Reset scores',
+
+    topic_label: 'Topic',
+    topic_ph: 'e.g. Eating pizza with a fork',
+    topic_add: 'Add a topic',
+
+    hint_prep_start: 'Pick the words, then spin or drag the score-range to set the target. Show or say your clue, then deploy.',
+    hint_prep_words: 'Type both ends of the spectrum, then deploy.',
+    hint_prep_ready: 'Target set! Add your topic or say your clue, then deploy to the guests.',
+    hint_reveal_lost: '⚠️ Target was lost after a page reload — restart the round below.',
+    hint_reveal_all: 'Everyone is in — reveal when ready!',
+    hint_reveal_wait: 'Waiting for every guest to lock in… ({done}/{total})',
+    hint_guest_locked: 'Locked in! Waiting for the others… ({done}/{total})',
+    hint_guest_aim: 'Drag the needle to where you think the target hides, then lock it in.',
+    lock_locked: '🔒 Locked in',
+    lock_thinking: 'thinking…',
+    overlay_waiting: 'waiting… for host',
+
+    pick_host_title: 'Pass the dial to…',
+    cancel: 'Cancel',
+    invite_title: '🎙️ Your turn to host!',
+    invite_body: 'The host wants to pass the dial to you. Take it?',
+    accept: 'Accept',
+    decline: 'Decline',
+    settings: 'Settings',
+    language: 'Language',
+    lang_note: 'Pick one Main (big, centre). Sub ▲ shows small above, Sub ▼ small below. None hides it.',
+    sound: 'Sound',
+    on: 'On',
+    off: 'Off',
+    mode_main: 'Main',
+    mode_sub_up: 'Sub ▲',
+    mode_sub_down: 'Sub ▼',
+    mode_none: 'None',
+
+    reset_title: 'Reset all scores?',
+    reset_body: "This will erase every player's total score and set it back to 0. This can't be undone.",
+    reset_yes: 'Yes, reset',
+    reset_no: 'No',
+
+    err_name: 'Give yourself a name first!',
+    err_code_digits: 'Room codes are 5 digits.',
+    err_create: 'Could not create room',
+    err_join: 'Could not join room',
+    room_closed: 'Room closed',
+    left_room: 'You left the room',
+    invite_sent: 'Invitation sent to {name}…',
+    now_host: 'You are the host now! 🎙️',
+    scores_reset: 'All scores reset to 0',
+    err_reset: 'Could not reset scores',
+    err_start: 'Could not start the game',
+    err_next: 'Could not start the next round',
+    err_lobby: 'Could not return to the lobby',
+    err_restart: 'Could not restart the round',
+    confirm_close_room: 'Leaving as host closes the room for everyone. Close it?'
+  },
+
+  th: {
+    room_label: 'ห้อง',
+    tagline: 'คำใบ้เดียว เข็มเดียว เพื่อน ๆ จะเดาได้ใกล้แค่ไหน?',
+    name_label: 'ชื่อของคุณ',
+    name_ph: 'เช่น กฤต',
+    new_game: 'เกมใหม่',
+    join_game: 'เข้าร่วมเกม',
+    code_ph: 'รหัส 5 หลัก',
+    join_room: 'เข้าห้อง',
+
+    share_code: 'แชร์รหัสนี้ให้เพื่อนของคุณ',
+    players_in_room: 'ผู้เล่นในห้อง',
+    start_game: 'เริ่มเกม',
+    waiting_host: 'กำลังรอโฮสต์เริ่มเกม…',
+    leave_room: 'ออกจากห้อง',
+
+    mode_suggested: 'แนะนำ',
+    mode_custom: 'กำหนดเอง',
+    spin_target: 'หมุนเป้า',
+    deploy: 'ส่ง',
+    guesses: 'คำตอบ',
+    reveal: 'เฉลย',
+    lock_answer: 'ล็อกคำตอบ',
+    locked: 'ล็อกแล้ว ✓',
+    scores: 'คะแนน',
+    th_player: 'ผู้เล่น',
+    th_round: 'รอบนี้',
+    th_total: 'รวม',
+    continue: 'ไปต่อ',
+    switch_host: 'เปลี่ยนโฮสต์',
+    exit: 'ออก',
+    restart_round: 'เริ่มรอบใหม่',
+    reset_scores: 'รีเซ็ตคะแนน',
+
+    topic_label: 'หัวข้อ',
+    topic_ph: 'เช่น กินพิซซ่าด้วยส้อม',
+    topic_add: 'เพิ่มหัวข้อ',
+
+    hint_prep_start: 'เลือกคำ แล้วหมุนหรือลากแถบคะแนนเพื่อตั้งเป้า จากนั้นบอกหรือพิมพ์คำใบ้ แล้วกดส่งให้ผู้เล่น',
+    hint_prep_words: 'พิมพ์คำทั้งสองฝั่งของสเกล แล้วกดส่ง',
+    hint_prep_ready: 'ตั้งเป้าแล้ว! เพิ่มหัวข้อหรือบอกคำใบ้ แล้วกดส่งให้ผู้เล่น',
+    hint_reveal_lost: '⚠️ เป้าหายหลังจากรีโหลดหน้า — เริ่มรอบใหม่ด้านล่าง',
+    hint_reveal_all: 'ทุกคนพร้อมแล้ว — เฉลยได้เลย!',
+    hint_reveal_wait: 'กำลังรอผู้เล่นทุกคนล็อกคำตอบ… ({done}/{total})',
+    hint_guest_locked: 'ล็อกแล้ว! กำลังรอคนอื่น… ({done}/{total})',
+    hint_guest_aim: 'ลากเข็มไปยังจุดที่คุณคิดว่าเป้าซ่อนอยู่ แล้วกดล็อกคำตอบ',
+    lock_locked: '🔒 ล็อกแล้ว',
+    lock_thinking: 'กำลังคิด…',
+    overlay_waiting: 'กำลังรอ… โฮสต์',
+
+    pick_host_title: 'ส่งหน้าปัดให้…',
+    cancel: 'ยกเลิก',
+    invite_title: '🎙️ ถึงตาคุณเป็นโฮสต์แล้ว!',
+    invite_body: 'โฮสต์อยากส่งหน้าปัดให้คุณ รับไหม?',
+    accept: 'รับ',
+    decline: 'ปฏิเสธ',
+    settings: 'ตั้งค่า',
+    language: 'ภาษา',
+    lang_note: 'เลือกภาษาหลัก 1 ภาษา (ตัวใหญ่ตรงกลาง) · Sub ▲ แสดงตัวเล็กด้านบน · Sub ▼ ด้านล่าง · None ซ่อนไว้',
+    sound: 'เสียง',
+    on: 'เปิด',
+    off: 'ปิด',
+    mode_main: 'หลัก',
+    mode_sub_up: 'รอง ▲',
+    mode_sub_down: 'รอง ▼',
+    mode_none: 'ไม่ใช้',
+
+    reset_title: 'รีเซ็ตคะแนนทั้งหมด?',
+    reset_body: 'การกระทำนี้จะลบคะแนนรวมของผู้เล่นทุกคนให้กลับเป็น 0 และไม่สามารถย้อนกลับได้',
+    reset_yes: 'ใช่ รีเซ็ตเลย',
+    reset_no: 'ไม่',
+
+    err_name: 'ตั้งชื่อของคุณก่อน!',
+    err_code_digits: 'รหัสห้องมี 5 หลัก',
+    err_create: 'สร้างห้องไม่สำเร็จ',
+    err_join: 'เข้าห้องไม่สำเร็จ',
+    room_closed: 'ห้องถูกปิดแล้ว',
+    left_room: 'คุณออกจากห้องแล้ว',
+    invite_sent: 'ส่งคำเชิญให้ {name} แล้ว…',
+    now_host: 'ตอนนี้คุณเป็นโฮสต์แล้ว! 🎙️',
+    scores_reset: 'รีเซ็ตคะแนนทั้งหมดเป็น 0 แล้ว',
+    err_reset: 'รีเซ็ตคะแนนไม่สำเร็จ',
+    err_start: 'เริ่มเกมไม่สำเร็จ',
+    err_next: 'เริ่มรอบถัดไปไม่สำเร็จ',
+    err_lobby: 'กลับไปที่ล็อบบี้ไม่สำเร็จ',
+    err_restart: 'เริ่มรอบใหม่ไม่สำเร็จ',
+    confirm_close_room: 'การออกในฐานะโฮสต์จะปิดห้องสำหรับทุกคน ต้องการปิดห้องไหม?'
+  },
+
+  ja: {
+    room_label: 'ルーム',
+    tagline: 'ヒントは一つ、針は一本。どこまで近づけるかな？',
+    name_label: 'あなたの名前',
+    name_ph: '例: Krit',
+    new_game: '新しいゲーム',
+    join_game: 'ゲームに参加',
+    code_ph: '5桁のコード',
+    join_room: 'ルームに参加',
+
+    share_code: 'このコードを友だちに共有しよう',
+    players_in_room: 'ルーム内のプレイヤー',
+    start_game: 'ゲーム開始',
+    waiting_host: 'ホストの開始を待っています…',
+    leave_room: 'ルームを出る',
+
+    mode_suggested: 'おすすめ',
+    mode_custom: 'カスタム',
+    spin_target: 'ターゲットを回す',
+    deploy: '送信',
+    guesses: '回答',
+    reveal: '公開',
+    lock_answer: '回答をロック',
+    locked: 'ロック済み ✓',
+    scores: 'スコア',
+    th_player: 'プレイヤー',
+    th_round: '今ラウンド',
+    th_total: '合計',
+    continue: '続ける',
+    switch_host: 'ホスト交代',
+    exit: '退出',
+    restart_round: 'ラウンドをやり直す',
+    reset_scores: 'スコアをリセット',
+
+    topic_label: 'お題',
+    topic_ph: '例: フォークでピザを食べる',
+    topic_add: 'お題を追加',
+
+    hint_prep_start: '言葉を選び、スコア帯を回すかドラッグしてターゲットを決めよう。ヒントを見せるか声に出してから送信してね。',
+    hint_prep_words: 'スペクトルの両端を入力してから送信してね。',
+    hint_prep_ready: 'ターゲット設定完了！お題を追加するかヒントを言って、みんなに送信しよう。',
+    hint_reveal_lost: '⚠️ ページの再読み込みでターゲットが失われました — 下でラウンドをやり直してください。',
+    hint_reveal_all: '全員そろいました — 準備ができたら公開！',
+    hint_reveal_wait: '全員のロックを待っています… ({done}/{total})',
+    hint_guest_locked: 'ロック完了！ほかの人を待っています… ({done}/{total})',
+    hint_guest_aim: 'ターゲットが隠れていると思う場所に針をドラッグして、ロックしてね。',
+    lock_locked: '🔒 ロック済み',
+    lock_thinking: '考え中…',
+    overlay_waiting: 'ホストを待っています…',
+
+    pick_host_title: 'ダイヤルを渡す相手…',
+    cancel: 'キャンセル',
+    invite_title: '🎙️ あなたがホストの番です！',
+    invite_body: 'ホストがダイヤルをあなたに渡そうとしています。引き受けますか？',
+    accept: '引き受ける',
+    decline: '断る',
+    settings: '設定',
+    language: '言語',
+    lang_note: 'メインを1つ選んでください（大きく中央）。Sub ▲ は上に小さく、Sub ▼ は下に小さく、None は非表示。',
+    sound: 'サウンド',
+    on: 'オン',
+    off: 'オフ',
+    mode_main: 'メイン',
+    mode_sub_up: 'サブ ▲',
+    mode_sub_down: 'サブ ▼',
+    mode_none: 'なし',
+
+    reset_title: '全スコアをリセットしますか？',
+    reset_body: '全プレイヤーの合計スコアを0に戻します。この操作は取り消せません。',
+    reset_yes: 'はい、リセット',
+    reset_no: 'いいえ',
+
+    err_name: 'まず名前を入力してね！',
+    err_code_digits: 'ルームコードは5桁です。',
+    err_create: 'ルームを作成できませんでした',
+    err_join: 'ルームに参加できませんでした',
+    room_closed: 'ルームが閉じられました',
+    left_room: 'ルームを退出しました',
+    invite_sent: '{name} さんに招待を送りました…',
+    now_host: 'あなたが今のホストです！🎙️',
+    scores_reset: '全スコアを0にリセットしました',
+    err_reset: 'スコアをリセットできませんでした',
+    err_start: 'ゲームを開始できませんでした',
+    err_next: '次のラウンドを開始できませんでした',
+    err_lobby: 'ロビーに戻れませんでした',
+    err_restart: 'ラウンドをやり直せませんでした',
+    confirm_close_room: 'ホストが退出すると全員のルームが閉じます。閉じますか？'
+  }
+};
+
+export function t(key) {
+  const lang = mainLang();
+  const table = STR[lang] || STR.en;
+  return (table[key] != null) ? table[key] : (STR.en[key] != null ? STR.en[key] : key);
+}
+
+/* Rewrite every tagged element under `root` into the current language.
+   data-i18n      → textContent
+   data-i18n-ph   → placeholder attribute */
+export function applyI18n(root = document) {
+  root.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  root.querySelectorAll('[data-i18n-ph]').forEach(el => { el.setAttribute('placeholder', t(el.dataset.i18nPh)); });
+}
