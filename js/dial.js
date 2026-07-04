@@ -223,8 +223,10 @@ export function createDial(mount, opts = {}) {
     // recolor the local needle so each player owns a distinct hue
     setNeedleColor(color) {
       const c = color || 'var(--red)';
-      needleGrp.querySelector('.needle-stick').setAttribute('stroke', c);
-      needleLabel.setAttribute('fill', c);
+      // inline style beats the .needle-stick / .needle-label CSS rules
+      // (a presentation attribute would lose to the stylesheet and stay red)
+      needleGrp.querySelector('.needle-stick').style.stroke = c;
+      needleLabel.style.fill = c;
     },
     // host-only: drag the score-range itself to place the target
     setTargetDraggable(b) {
