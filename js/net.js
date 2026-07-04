@@ -102,12 +102,21 @@ export async function deploy(code, leftWord, rightWord, mode) {
   }).eq('code', code));
 }
 
-/* Band geometry: bands are 9° wide, values [2,3,4,3,2] centered
-   on the target → |diff| ≤ 4.5 = 4pts, ≤ 13.5 = 3, ≤ 22.5 = 2. */
+/* The shared "topic to rate" the host types instead of saying it out
+   loud. Kept OUT of the core room writes so a missing `topic` column
+   only ever affects this one feature — never blocks starting a game,
+   deploying, or continuing. Requires a one-time migration:
+     alter table public.rooms add column if not exists topic text;
+   `topic === null` → box removed;  '' → present but empty;  text → shown. */
+export const setTopic = (code, topic) =>
+  run(sb.from('rooms').update({ topic }).eq('code', code));
+
+/* Band geometry: bands are 9° wide, values [1,2,3,2,1] centered
+   on the target → |diff| ≤ 4.5 = 3pts, ≤ 13.5 = 2, ≤ 22.5 = 1. */
 export function scoreFor(needle, target) {
   if (needle == null || target == null) return 0;
   const d = Math.abs(needle - target);
-  return d <= 4.5 ? 4 : d <= 13.5 ? 3 : d <= 22.5 ? 2 : 0;
+  return d <= 4.5 ? 3 : d <= 13.5 ? 2 : d <= 22.5 ? 1 : 0;
 }
 
 export async function reveal(code, targetAngle, guests) {
