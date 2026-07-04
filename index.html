@@ -60,6 +60,7 @@
         <p class="waiting-text" id="lobbyWaiting" hidden>
           <span class="mini-spinner"></span> <span data-i18n="waiting_host">Waiting for the host to start…</span>
         </p>
+        <button class="btn btn-ghost btn-reset" id="resetScoreBtn" hidden><span>🧹</span><span data-i18n="reset_scores">Reset scores</span></button>
         <button class="btn btn-ghost" id="lobbyLeaveBtn"><span>↩</span><span data-i18n="leave_room">Leave room</span></button>
       </div>
     </div>
@@ -108,7 +109,6 @@
           <button class="btn btn-reveal" id="deployBtn" disabled><span>📡</span><span data-i18n="deploy">Deploy</span></button>
         </div>
         <p class="hint" id="hostHint" data-i18n="hint_prep_start">Pick the words, then spin or drag the score-range to set the target. Show or say your clue, then deploy.</p>
-        <button class="btn btn-ghost btn-reset" id="resetScoreBtn"><span>🧹</span><span data-i18n="reset_scores">Reset scores</span></button>
       </div>
 
       <!-- HOST: AIMING (lock status + reveal) -->
