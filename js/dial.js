@@ -4,7 +4,9 @@
 
    createDial(mount, opts) → controller
      opts.needle        : boolean — render a draggable needle (guest view)
-     opts.onNeedleSet   : fn(angle) — fires when a drag finishes on a new spot
+     opts.onNeedleSet   : fn(angle) — fires when a needle drag finishes on a new spot
+     opts.onTargetSet   : fn(angle) — fires when the host finishes DRAGGING the
+                          score-range to a new spot (manual target placement)
 
    controller:
      setTarget(angle)          rotate the score bands to `angle`
@@ -12,13 +14,16 @@
      setCover(show)            show/hide the mint shield over the bands
      setNeedle(angle) / getNeedle()
      setNeedleEnabled(bool)    allow/deny dragging
+     setNeedleColor(color)     recolor the local needle (per-player color)
+     setTargetDraggable(bool)  let the host drag the bands to place the target
      setGhosts(list)           [{angle, name, color}] extra needles (reveal)
      isSpinning()
    ============================================================ */
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const CX = 200, CY = 228, R_FACE = 186;
-const BAND_VALUES = [2, 3, 4, 3, 2];
+// score bands, centre outward. Change here + scoreFor() in net.js together.
+const BAND_VALUES = [1, 2, 3, 2, 1];
 const BAND_WIDTH = 9;
 const TOTAL_SPAN = BAND_VALUES.length * BAND_WIDTH;
 const PLAY_LIMIT = 90;   // needle & target sweep the full semicircle
@@ -27,7 +32,7 @@ let uid = 0;
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
 export function createDial(mount, opts = {}) {
-  const { needle = true, onNeedleSet = null } = opts;
+  const { needle = true, onNeedleSet = null, onTargetSet = null } = opts;
   const id = `dial${++uid}`;
 
   /* ---------- build the SVG shell ----------
@@ -81,13 +86,14 @@ export function createDial(mount, opts = {}) {
     targetAngle: 0,
     needleAngle: 0,
     needleEnabled: false,
+    targetDraggable: false,
     spinning: false
   };
   applyRotation();
   applyNeedle();
 
-  /* ---------- needle drag ---------- */
-  let dragging = false, dragStart = 0;
+  /* ---------- drag: needle (guest) OR score-range (host) ---------- */
+  let dragging = false, dragStart = 0, dragMode = null;
   function toAngle(clientX, clientY) {
     const r = svg.getBoundingClientRect();
     const x = (clientX - r.left) * (400 / r.width);
@@ -101,30 +107,50 @@ export function createDial(mount, opts = {}) {
     return (y <= CY + 2) && (Math.hypot(x - CX, y - CY) <= R_FACE + 12);
   }
   function startDrag(e) {
-    if (!needle || !state.needleEnabled || state.spinning) return;
+    if (state.spinning) return;
     const pt = e.touches ? e.touches[0] : e;
     if (!onUpperFace(pt.clientX, pt.clientY)) return;
+    if (needle && state.needleEnabled) {
+      dragMode = 'needle';
+      dragStart = state.needleAngle;
+      needleGrp.classList.add('dragging');
+      state.needleAngle = toAngle(pt.clientX, pt.clientY);
+      applyNeedle();
+    } else if (state.targetDraggable) {
+      dragMode = 'target';
+      dragStart = state.targetAngle;
+      svg.classList.add('grabbing');
+      state.targetAngle = toAngle(pt.clientX, pt.clientY);
+      applyRotation();
+    } else {
+      return;
+    }
     dragging = true;
-    dragStart = state.needleAngle;
-    needleGrp.classList.add('dragging');
-    state.needleAngle = toAngle(pt.clientX, pt.clientY);
-    applyNeedle();
     e.preventDefault();
   }
   function moveDrag(e) {
     if (!dragging) return;
     const pt = e.touches ? e.touches[0] : e;
-    state.needleAngle = toAngle(pt.clientX, pt.clientY);
-    applyNeedle();
+    const a = toAngle(pt.clientX, pt.clientY);
+    if (dragMode === 'needle') { state.needleAngle = a; applyNeedle(); }
+    else { state.targetAngle = a; applyRotation(); }
     e.preventDefault();
   }
   function endDrag() {
     if (!dragging) return;
     dragging = false;
-    needleGrp.classList.remove('dragging');
-    if (Math.abs(state.needleAngle - dragStart) > 0.5 && onNeedleSet) {
-      onNeedleSet(state.needleAngle);
+    if (dragMode === 'needle') {
+      needleGrp.classList.remove('dragging');
+      if (Math.abs(state.needleAngle - dragStart) > 0.5 && onNeedleSet) {
+        onNeedleSet(state.needleAngle);
+      }
+    } else if (dragMode === 'target') {
+      svg.classList.remove('grabbing');
+      if (Math.abs(state.targetAngle - dragStart) > 0.5 && onTargetSet) {
+        onTargetSet(state.targetAngle);
+      }
     }
+    dragMode = null;
   }
   svg.addEventListener('mousedown', startDrag);
   window.addEventListener('mousemove', moveDrag);
@@ -195,6 +221,19 @@ export function createDial(mount, opts = {}) {
     setNeedleEnabled(b) {
       state.needleEnabled = !!b;
       needleGrp.classList.toggle('disabled', !b);
+    },
+    // recolor the local needle so each player owns a distinct hue
+    setNeedleColor(color) {
+      const c = color || 'var(--red)';
+      needleGrp.querySelector('.needle-stick').setAttribute('stroke', c);
+      needleGrp.querySelector('.needle-hub-outer').setAttribute('fill', c);
+      needleGrp.querySelector('.needle-hub-inner').setAttribute('fill', c);
+      needleLabel.setAttribute('fill', c);
+    },
+    // host-only: drag the score-range itself to place the target
+    setTargetDraggable(b) {
+      state.targetDraggable = !!b;
+      svg.classList.toggle('target-drag', !!b);
     },
     isSpinning() { return state.spinning; },
 
