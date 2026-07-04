@@ -106,6 +106,10 @@ export function broadcastTopic(topic) {
 export const startGame = code =>
   run(sb.from('rooms').update({ phase: 'prep' }).eq('code', code));
 
+/* Wipe every player's running total back to 0 (host "Reset scores"). */
+export const resetScores = code =>
+  run(sb.from('players').update({ score: 0 }).eq('room_code', code));
+
 export async function deploy(code, leftWord, rightWord, mode) {
   // reset every guess from the previous round, then open aiming.
   // NOTE: target_angle stays null — the secret lives in the host's memory.
