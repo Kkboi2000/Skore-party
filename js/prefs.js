@@ -77,12 +77,14 @@ export function setSoundPref(on) {
 /* ---------------- sound effects ---------------- */
 
 const FILES = {
-  reveal: 'reveal.mp3',   // scores revealed
-  point:  'point.mp3',    // needle moved
-  next:   'next.mp3',     // 🗘 new words
-  gear:   'gear.mp3',     // target spinning
-  ping:   'ping.mp3',     // sound switched on
-  lock:   'lock.mp3'      // answer locked
+  reveal: 'reveal.mp3',      // scores revealed
+  point:  'point.mp3',       // needle moved
+  next:   'next.mp3',        // 🗘 new words
+  gear:   'gear.mp3',        // target spinning
+  ping:   'ping.mp3',        // sound switched on
+  lock:   'lock.mp3',        // answer locked
+  start:  'Gamestart.mp3',   // game starts (lobby → prep)
+  deploy: 'pageturn.mp3'     // host deploys (prep → aiming)
 };
 const audioCache = {};
 
