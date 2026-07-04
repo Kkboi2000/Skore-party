@@ -149,6 +149,8 @@ body{
   aspect-ratio:400/232;margin-top:6px;overflow:hidden;
 }
 .dial-svg{width:100%;display:block;overflow:visible;aspect-ratio:400/248;}
+.dial-svg.target-drag{cursor:grab;}
+.dial-svg.target-drag.grabbing{cursor:grabbing;}
 .scallop{fill:var(--cream);}
 .dial-face-top{fill:var(--cream);}
 .dial-face-bottom{fill:var(--navy);}
@@ -219,6 +221,48 @@ body{
   box-shadow:0 4px 12px var(--shadow);transition:transform .15s ease;
 }
 .shuffle-btn:active{transform:translate(-50%,-50%) rotate(160deg);}
+
+/* ---------- topic box (below the board) ---------- */
+.topic-mount{width:min(86vw,440px);margin-top:12px;display:flex;justify-content:center;}
+.topic-mount:empty{display:none;}
+.topic-box{
+  position:relative;width:100%;
+  background:var(--cream);color:var(--navy-deep);
+  border-radius:14px;box-shadow:0 10px 26px var(--shadow);
+  padding:14px 42px;text-align:center;z-index:4;
+  animation:chipIn .2s ease;
+}
+.topic-label{
+  font-weight:800;font-size:11px;text-transform:uppercase;
+  letter-spacing:.1em;opacity:.5;margin-bottom:6px;
+}
+.topic-text{font-weight:900;font-size:clamp(17px,5vw,24px);line-height:1.25;word-break:break-word;}
+.topic-input{
+  display:block;width:100%;border:1.5px dashed var(--mint-dark);
+  background:rgba(255,255,255,.65);border-radius:10px;
+  text-align:center;font-family:inherit;color:var(--navy-deep);
+  padding:10px 8px;font-weight:900;font-size:clamp(16px,4.6vw,22px);
+  line-height:1.25;resize:none;overflow:hidden;
+}
+.topic-input:focus{outline:none;border-style:solid;background:#fff;}
+.topic-input::placeholder{opacity:.4;font-weight:700;}
+.topic-remove{
+  position:absolute;top:8px;right:8px;width:26px;height:26px;border-radius:50%;
+  border:none;background:rgba(28,58,94,.1);color:var(--navy-deep);
+  font-size:14px;line-height:1;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s,color .15s;font-family:inherit;
+}
+.topic-remove:hover{background:var(--red);color:#fff;}
+.topic-add{
+  width:100%;border:2px dashed rgba(244,241,232,.42);
+  background:rgba(255,255,255,.05);border-radius:14px;padding:14px;
+  color:var(--cream);opacity:.72;cursor:pointer;font-weight:800;font-size:14px;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  font-family:inherit;transition:opacity .15s,border-color .15s,background .15s;
+}
+.topic-add:hover{opacity:1;border-color:var(--mint-dark);background:rgba(255,255,255,.08);}
+.topic-add .plus{font-size:20px;line-height:1;}
 
 /* ---------- panels below the board ---------- */
 .panel{
@@ -362,7 +406,7 @@ body{
 /* ---------- multi-language word stack ---------- */
 .w-sub{font-weight:700;font-size:clamp(11px,3vw,13px);opacity:.6;line-height:1.15;}
 
-/* owner's name above their red needle at reveal */
+/* owner's name above their needle at reveal (colour set inline per player) */
 .needle-label{fill:var(--red);}
 
 @media (max-width:420px){
