@@ -13,7 +13,7 @@
 import {
   createRoom, joinRoom, watchRoom, fetchPlayer,
   startGame, deploy, setTopic, broadcastTopic, reveal, scoreFor, continueRound,
-  backToLobby, deleteRoom,
+  backToLobby, deleteRoom, resetScores,
   offerHost, declineHost, acceptHost,
   lockAnswer, leaveRoom
 } from './net.js';
@@ -22,6 +22,7 @@ import {
   prefs, mainLang, setLangPref, setSoundPref, playSound,
   LANGS, LANG_MODES
 } from './prefs.js';
+import { t, applyI18n } from './i18n.js';
 
 const $ = id => document.getElementById(id);
 const DECKS = window.WAVELENGTH_WORDS;
@@ -133,7 +134,7 @@ function enterRoom(code, playerId) {
     JSON.stringify({ code, playerId, name: S.name }));
   S.unsub = watchRoom(code, {
     onRoom(room) {
-      if (!room) { cleanup(); toast('Room closed'); return; }
+      if (!room) { cleanup(); toast(t('room_closed')); return; }
       S.room = room;
       render();
     },
@@ -188,7 +189,7 @@ function render() {
   if (!room || !S.myId) return;
 
   const me = S.players.find(p => p.id === S.myId);
-  if (S.players.length && !me) { cleanup(); toast('You left the room'); return; }
+  if (S.players.length && !me) { cleanup(); toast(t('left_room')); return; }
 
   const isHost = room.host_id === S.myId;
   const guests = S.players.filter(p => p.id !== room.host_id);
@@ -448,7 +449,7 @@ function renderTopic() {
       const add = document.createElement('button');
       add.type = 'button';
       add.className = 'topic-add';
-      add.innerHTML = '<span class="plus">+</span><span>Add a topic</span>';
+      add.innerHTML = '<span class="plus">+</span><span>' + t('topic_add') + '</span>';
       add.addEventListener('click', () => {
         S.topicOn = true;
         S.topicDraft = '';
@@ -464,14 +465,14 @@ function renderTopic() {
       box.className = 'topic-box';
       const label = document.createElement('div');
       label.className = 'topic-label';
-      label.textContent = 'Topic';
+      label.textContent = t('topic_label');
       const inp = document.createElement('textarea');
       inp.id = 'topicInput';
       inp.className = 'topic-input';
       inp.rows = 1;
       inp.maxLength = 90;
       inp.setAttribute('dir', 'auto');
-      inp.placeholder = 'e.g. Eating pizza with a fork';
+      inp.placeholder = t('topic_ph');
       inp.value = S.topicDraft;
       inp.addEventListener('input', () => {
         S.topicDraft = inp.value;
@@ -502,7 +503,7 @@ function renderTopic() {
       box.className = 'topic-box readonly';
       const label = document.createElement('div');
       label.className = 'topic-label';
-      label.textContent = 'Topic';
+      label.textContent = t('topic_label');
       const text = document.createElement('div');
       text.className = 'topic-text';
       text.id = 'topicText';
@@ -532,8 +533,8 @@ function renderLive(room, me, isHost, guests) {
       row.className = 'lock-row' + (g.locked ? ' locked' : '');
       row.innerHTML = `<span>${escapeHtml(g.name)}</span>
         <span class="status">${g.locked
-          ? '🔒 Locked in'
-          : '<span class="mini-spinner"></span> thinking…'}</span>`;
+          ? t('lock_locked')
+          : '<span class="mini-spinner"></span> ' + t('lock_thinking')}</span>`;
       list.appendChild(row);
     }
     const allLocked = guests.length > 0 && guests.every(g => g.locked);
@@ -541,10 +542,10 @@ function renderLive(room, me, isHost, guests) {
     $('revealBtn').disabled = !canReveal;
     $('revealHint').textContent =
       S.localTarget == null
-        ? '⚠️ Target was lost after a page reload — restart the round below.'
+        ? t('hint_reveal_lost')
         : allLocked
-          ? 'Everyone is in — reveal when ready!'
-          : `Waiting for every guest to lock in… (${guests.filter(g => g.locked).length}/${guests.length})`;
+          ? t('hint_reveal_all')
+          : t('hint_reveal_wait').replace('{done}', guests.filter(g => g.locked).length).replace('{total}', guests.length);
     ensureRestartButton(S.localTarget == null, room);
   }
 
@@ -555,11 +556,11 @@ function renderLive(room, me, isHost, guests) {
     if (locked && me.needle != null) S.dial.setNeedle(me.needle);
     $('lockBtn').disabled = locked;
     $('lockBtn').querySelector('span:last-child').textContent =
-      locked ? 'Locked ✓' : 'Lock answer';
+      locked ? t('locked') : t('lock_answer');
     const done = guests.filter(g => g.locked).length;
     $('guestAimHint').textContent = locked
-      ? `Locked in! Waiting for the others… (${done}/${guests.length})`
-      : 'Drag the needle to where you think the target hides, then lock it in.';
+      ? t('hint_guest_locked').replace('{done}', done).replace('{total}', guests.length)
+      : t('hint_guest_aim');
   }
 
   if (phase === 'revealed') {
@@ -580,7 +581,7 @@ function renderLive(room, me, isHost, guests) {
     renderScores(room, withColor);
     $('scorePanel').hidden = (!isHost && S.guestHidScores);
     $('boardOverlay').hidden = !( !isHost && S.guestHidScores );
-    $('boardOverlayText').textContent = 'waiting… for host';
+    $('boardOverlayText').textContent = t('overlay_waiting');
   }
 }
 
@@ -607,10 +608,10 @@ function ensureRestartButton(show, room) {
     btn = document.createElement('button');
     btn.id = 'restartRoundBtn';
     btn.className = 'btn btn-ghost';
-    btn.innerHTML = '<span>♻️</span><span>Restart round</span>';
+    btn.innerHTML = '<span>♻️</span><span>' + t('restart_round') + '</span>';
     btn.addEventListener('click', () =>
       continueRound(S.code, room.round)
-        .catch(err => toast(err.message || 'Could not restart the round')));
+        .catch(() => toast(t('err_restart'))));
     $('hostAimPanel').appendChild(btn);
   } else if (!show && btn) {
     btn.remove();
@@ -638,7 +639,7 @@ function handleInvites(room, isHost) {
   if (isHost && pending && S.toldInviteSent !== pending) {
     S.toldInviteSent = pending;
     const target = S.players.find(p => p.id === pending);
-    toast(`Invitation sent to ${target ? target.name : 'player'}…`);
+    toast(t('invite_sent').replace('{name}', target ? target.name : 'player'));
   }
   if (!pending) S.toldInviteSent = null;
 }
@@ -648,7 +649,7 @@ function handleInvites(room, isHost) {
    ------------------------------------------------------------ */
 function requireName() {
   const name = $('nameInput').value.trim();
-  if (!name) { showEntryError('Give yourself a name first!'); return null; }
+  if (!name) { showEntryError(t('err_name')); return null; }
   S.name = name;
   return name;
 }
@@ -666,7 +667,7 @@ $('newGameBtn').addEventListener('click', async () => {
     const { code, playerId } = await createRoom(name);
     enterRoom(code, playerId);
   } catch (err) {
-    showEntryError(err.message || 'Could not create room');
+    showEntryError(err.message || t('err_create'));
   } finally {
     $('newGameBtn').disabled = false;
   }
@@ -683,13 +684,13 @@ $('codeInput').addEventListener('keydown', e => { if (e.key === 'Enter') doJoin(
 async function doJoin() {
   const name = requireName(); if (!name) return;
   const code = $('codeInput').value.trim();
-  if (!/^\d{5}$/.test(code)) { showEntryError('Room codes are 5 digits.'); return; }
+  if (!/^\d{5}$/.test(code)) { showEntryError(t('err_code_digits')); return; }
   $('joinBtn').disabled = true;
   try {
     const { playerId } = await joinRoom(code, name);
     enterRoom(code, playerId);
   } catch (err) {
-    showEntryError(err.message || 'Could not join room');
+    showEntryError(err.message || t('err_join'));
   } finally {
     $('joinBtn').disabled = false;
   }
@@ -701,7 +702,7 @@ $('startBtn').addEventListener('click', async () => {
   try {
     await startGame(S.code);
   } catch (err) {
-    toast(err.message || 'Could not start the game');
+    toast(err.message || t('err_start'));
     $('startBtn').disabled = false;
   }
   // on success the realtime echo flips phase → render() re-enables UI
@@ -709,7 +710,7 @@ $('startBtn').addEventListener('click', async () => {
 $('lobbyLeaveBtn').addEventListener('click', async () => {
   const isHost = S.room && S.room.host_id === S.myId;
   if (isHost) {
-    if (!confirm('Leaving as host closes the room for everyone. Close it?')) return;
+    if (!confirm(t('confirm_close_room'))) return;
     await deleteRoom(S.code);
   } else {
     await leaveRoom(S.myId);
@@ -755,10 +756,10 @@ function updateDeployEnabled() {
   const { left, right } = currentWords();
   $('deployBtn').disabled = !(S.hasSpun && left && right);
   $('hostHint').textContent = !S.hasSpun
-    ? 'Pick the words, then spin or drag the score-range to set the target. Show or say your clue, then deploy.'
+    ? t('hint_prep_start')
     : (!left || !right)
-      ? 'Type both ends of the spectrum, then deploy.'
-      : 'Target set! Add your topic or say your clue, then deploy to the guests.';
+      ? t('hint_prep_words')
+      : t('hint_prep_ready');
 }
 
 $('deployBtn').addEventListener('click', async () => {
@@ -789,7 +790,7 @@ $('lockBtn').addEventListener('click', async () => {
 /* ----- round end ----- */
 $('continueBtn').addEventListener('click', () =>
   continueRound(S.code, S.room.round)
-    .catch(err => toast(err.message || 'Could not start the next round')));
+    .catch(() => toast(t('err_next'))));
 
 $('switchHostBtn').addEventListener('click', () => {
   const list = $('pickHostList');
@@ -811,7 +812,7 @@ $('pickHostCancel').addEventListener('click', () =>
 
 $('hostExitBtn').addEventListener('click', () =>
   backToLobby(S.code)
-    .catch(err => toast(err.message || 'Could not return to the lobby')));
+    .catch(() => toast(t('err_lobby'))));
 
 $('guestContinueBtn').addEventListener('click', () => {
   S.guestHidScores = true;      // dismiss scores, wait for the host
@@ -826,11 +827,23 @@ $('guestExitBtn').addEventListener('click', async () => {
 $('inviteAcceptBtn').addEventListener('click', async () => {
   openModal('inviteOverlay', false);
   await acceptHost(S.code, S.myId, S.room.host_id);
-  toast('You are the host now! 🎙️');
+  toast(t('now_host'));
 });
 $('inviteDeclineBtn').addEventListener('click', async () => {
   openModal('inviteOverlay', false);
   await declineHost(S.code);
+});
+
+/* ----- reset scores (host) ----- */
+$('resetScoreBtn').addEventListener('click', () => openModal('resetScoreOverlay', true));
+$('resetScoreNo').addEventListener('click', () => openModal('resetScoreOverlay', false));
+$('resetScoreOverlay').addEventListener('click', e => {
+  if (e.target === $('resetScoreOverlay')) openModal('resetScoreOverlay', false);
+});
+$('resetScoreYes').addEventListener('click', async () => {
+  openModal('resetScoreOverlay', false);
+  try { await resetScores(S.code); toast(t('scores_reset')); }
+  catch { toast(t('err_reset')); }
 });
 
 /* ------------------------------------------------------------
@@ -854,7 +867,7 @@ function renderSettings() {
     for (const m of LANG_MODES) {
       const b = document.createElement('button');
       b.className = 'lang-opt' + (prefs.langs[l.key] === m.value ? ' active' : '');
-      b.textContent = m.label;
+      b.textContent = t({ main: 'mode_main', up: 'mode_sub_up', down: 'mode_sub_down', none: 'mode_none' }[m.value]);
       // the one Main can't be demoted directly — pick a new Main instead
       b.disabled = prefs.langs[l.key] === 'main' && m.value !== 'main';
       b.addEventListener('click', () => {
@@ -872,6 +885,7 @@ function renderSettings() {
 
 function onPrefsChanged() {
   S.prefsRev++;                 // invalidates the structural render key
+  applyI18n();                  // the Main language may have changed the whole UI
   renderSettings();
   if (S.room) render();         // live re-render of the clue card
 }
@@ -908,5 +922,6 @@ window.addEventListener('pagehide', () => {
   }
 });
 
+applyI18n();          // paint the UI in the saved Main language
 showScreen('title');
 tryResume();
