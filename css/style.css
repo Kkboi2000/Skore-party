@@ -119,6 +119,8 @@ body{
 .btn-ghost{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);}
 .card .btn-ghost,.modal .btn-ghost{background:transparent;border:1.5px solid rgba(28,58,94,.3);color:var(--navy-deep);box-shadow:none;}
 .btn:disabled{opacity:.45;cursor:not-allowed;filter:grayscale(.3);}
+.btn-reset{font-size:13px;padding:9px 18px;opacity:.8;}
+.btn-reset:hover{opacity:1;}
 
 /* ---------- lobby ---------- */
 .lobby-card{text-align:center;}
