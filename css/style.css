@@ -417,3 +417,21 @@ body{
   .lang-opt{padding:7px 8px;font-size:11px;}
   .lang-name{font-size:13px;}
 }
+
+/* ---------- top-bar exit + spin lever ---------- */
+.exit-btn:hover{background:rgba(214,50,46,.35);transform:none;}
+.prep-controls{align-items:center;gap:20px;}
+.spin-lever{
+  background:none;border:none;padding:0;margin:0;line-height:0;cursor:pointer;
+  width:56px;height:104px;flex:0 0 auto;
+  filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));
+}
+.spin-lever svg{width:56px;height:104px;display:block;overflow:visible;}
+.spin-lever .lever-arm{
+  transform-box:view-box;transform-origin:32px 99px;
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+}
+.spin-lever:hover .lever-arm{transform:rotate(-4deg);}
+.spin-lever:active .lever-arm{transform:rotate(16deg);}
+.spin-lever.pulled .lever-arm{transform:rotate(24deg);}
+.spin-lever.disabled{pointer-events:none;opacity:.55;}
