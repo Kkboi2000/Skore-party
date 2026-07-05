@@ -174,12 +174,13 @@ export const offerHost = (code, playerId) =>
 export const declineHost = code =>
   run(sb.from('rooms').update({ pending_host: null }).eq('code', code));
 
-export async function acceptHost(code, myId, oldHostId) {
+export async function acceptHost(code, myId, oldHostId, nextPhase = 'prep') {
   await run(sb.from('players').update({ is_host: false }).eq('id', oldHostId));
   await run(sb.from('players').update({ is_host: true }).eq('id', myId));
   await run(sb.from('rooms').update({
+    // stay in the lobby if the handoff happened there; otherwise (re)start prep
     host_id: myId, pending_host: null,
-    phase: 'prep', target_angle: null,
+    phase: nextPhase, target_angle: null,
     left_word: null, right_word: null
   }).eq('code', code));
 }
