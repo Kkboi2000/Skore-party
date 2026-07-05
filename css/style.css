@@ -147,7 +147,7 @@ body{
   width:100%;display:flex;flex-direction:column;align-items:center;
 }
 .dial-wrap{
-  position:relative;width:min(92vw,560px);
+  position:relative;width:100%;
   aspect-ratio:400/232;margin-top:6px;overflow:hidden;
 }
 .dial-svg{width:100%;display:block;overflow:visible;aspect-ratio:400/248;}
@@ -418,20 +418,31 @@ body{
   .lang-name{font-size:13px;}
 }
 
-/* ---------- top-bar exit + spin lever ---------- */
-.exit-btn:hover{background:rgba(214,50,46,.35);transform:none;}
-.prep-controls{align-items:center;gap:20px;}
+/* ---------- top bar: left group + exit pill ---------- */
+.topbar-left{display:flex;align-items:center;gap:10px;min-width:0;}
+.topbar-exit{padding:7px 14px;font-size:13px;box-shadow:none;gap:7px;}
+
+/* ---------- prep controls ---------- */
+.prep-controls{align-items:center;gap:16px;}
+
+/* ---------- spin lever (mounted on the left of the board) ---------- */
+.board-wrap{position:relative;width:min(92vw,560px);}
 .spin-lever{
+  position:absolute;left:-4px;top:30%;transform:translateY(-50%);
+  width:52px;height:96px;z-index:9;
   background:none;border:none;padding:0;margin:0;line-height:0;cursor:pointer;
-  width:56px;height:104px;flex:0 0 auto;
-  filter:drop-shadow(0 6px 10px rgba(0,0,0,.35));
+  filter:drop-shadow(0 5px 9px rgba(0,0,0,.4));
 }
-.spin-lever svg{width:56px;height:104px;display:block;overflow:visible;}
+.spin-lever svg{width:52px;height:96px;display:block;overflow:visible;}
 .spin-lever .lever-arm{
   transform-box:view-box;transform-origin:32px 99px;
-  transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+  transition:transform .42s cubic-bezier(.34,1.4,.6,1);
 }
-.spin-lever:hover .lever-arm{transform:rotate(-4deg);}
-.spin-lever:active .lever-arm{transform:rotate(16deg);}
-.spin-lever.pulled .lever-arm{transform:rotate(24deg);}
-.spin-lever.disabled{pointer-events:none;opacity:.55;}
+.spin-lever:hover .lever-arm{transform:rotate(7deg);}
+.spin-lever.down .lever-arm,
+.spin-lever.down:hover .lever-arm{transform:rotate(74deg);}   /* swing down + hold through the spin */
+.spin-lever.disabled{pointer-events:none;}
+@media (max-width:440px){
+  .spin-lever{width:44px;height:82px;left:-2px;}
+  .spin-lever svg{width:44px;height:82px;}
+}
